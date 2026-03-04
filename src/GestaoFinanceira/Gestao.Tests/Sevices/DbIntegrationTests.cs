@@ -14,28 +14,14 @@ namespace Gestao.Tests.Sevices
         private readonly DbConnectionFactory _dbFactory = new DbConnectionFactory();
 
         [Fact]
-        public void Deve_Conectar_E_Consultar_Utilizadores_Do_Seed()
+        public void Diagnostico_Config()
         {
-            // Arrange & Act
-            using var db = _dbFactory.CreateConnection();
-            // Consulta os utilizadores que inseriste no script SQL (João Silva, Maria Costa)
-            var users = db.Query<Utilizador>("SELECT * FROM Utilizador").ToList();
+            // Forma correta para .NET 6/7/8
+            string caminhoBase = System.AppContext.BaseDirectory;
+            string nomeConfig = System.AppDomain.CurrentDomain.FriendlyName + ".dll.config";
 
-            // Assert
-            Assert.NotNull(users);
-            Assert.True(users.Count >= 2); // O teu script insere 2 utilizadores iniciais
-            Assert.Contains(users, u => u.Nome == "João Silva");
-        }
-
-        [Fact]
-        public void Deve_Validar_View_Saldo_Actual()
-        {
-            using var db = _dbFactory.CreateConnection();
-
-            // Testa se a View que criaste no SQL está acessível
-            var saldo = db.QueryFirst("SELECT TOP 1 saldo_actual FROM vw_SaldoActual WHERE id_conta = 1");
-
-            Assert.NotNull(saldo);
+            // Isto vai imprimir no output do teste o caminho onde o ficheiro DEVE estar
+            throw new System.Exception($"O ficheiro deve estar em: {caminhoBase} com o nome: {nomeConfig}");
         }
     }
 }

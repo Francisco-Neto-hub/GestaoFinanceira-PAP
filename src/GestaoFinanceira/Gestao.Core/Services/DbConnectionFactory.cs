@@ -3,14 +3,25 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Configuration;
 
 namespace Gestao.Core.Services
 {
     public class DbConnectionFactory
     {
-        // Altera 'TEU_SERVIDOR' pelo nome da tua instância SQL (ex: . ou (localdb)\MSSQLLocalDB)
-        private readonly string _connectionString = "Server=DESKTOP-QMNRH7F\\SQLEXPRESS;Database=BD_Finance_v1;Trusted_Connection=True;TrustServerCertificate=True;";
+        public IDbConnection CreateConnection()
+        {
+            // 1. Tenta ler do App.config
+            var connectionString = ConfigurationManager.ConnectionStrings["FinanceDB"]?.ConnectionString;
 
-        public IDbConnection CreateConnection() => new SqlConnection(_connectionString);
+            // 2. Se falhar (como nos testes), usa a string local direta
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                // Substitui pelo teu IP ou '.' se for local
+                connectionString = "Server=.;Database=BD_Finance_v1;Trusted_Connection=True;TrustServerCertificate=True;";
+            }
+
+            return new SqlConnection(connectionString);
+        }
     }
 }
