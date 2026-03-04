@@ -7,17 +7,23 @@ using System.Configuration;
 
 namespace Gestao.Core.Services
 {
+    /// <summary>
+    /// Fábrica responsável pela criação e configuração de conexões com a Base de Dados SQL Server.
+    /// </summary>
     public class DbConnectionFactory
     {
+        /// <summary>
+        /// Cria uma nova instância de conexão SQL. 
+        /// Tenta ler a ConnectionString do App.config; caso falhe, utiliza uma configuração local de fallback.
+        /// </summary>
+        /// <returns>Uma implementação de <see cref="IDbConnection"/> pronta a ser aberta.</returns>
         public IDbConnection CreateConnection()
         {
-            // 1. Tenta ler do App.config
             var connectionString = ConfigurationManager.ConnectionStrings["FinanceDB"]?.ConnectionString;
 
-            // 2. Se falhar (como nos testes), usa a string local direta
             if (string.IsNullOrEmpty(connectionString))
             {
-                // Substitui pelo teu IP ou '.' se for local
+                // Fallback para ambiente de desenvolvimento/testes
                 connectionString = "Server=.;Database=BD_Finance_v1;Trusted_Connection=True;TrustServerCertificate=True;";
             }
 
