@@ -1,9 +1,6 @@
-﻿using Finance.Core.Data;
-using Finance.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Finance.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics; // Necessário para o Debug.WriteLine
 
 namespace Finance.Core.Services
 {
@@ -16,40 +13,81 @@ namespace Finance.Core.Services
             _context = context;
         }
 
-        // Obtém todas as contas de um contrato específico
-        public async Task<List<Conta>> GetContasPorContratoAsync(int idContrato)
-        {
-            return await _context.Contas
-                .Where(c => c.IdContrato == idContrato)
-                .ToListAsync();
-        }
+        // --- MOVIMENTAÇÕES ---
 
-        // Regista um movimento e atualiza o saldo automaticamente
-        public async Task<bool> RegistarMovimentoAsync(Transacao novaTransacao)
+        public async Task<(bool Sucesso, string Mensagem)> RegistarTransacaoAsync(Transacao movimento)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            // 1. Validação de Entrada: Impede valores negativos ou zero na transação
+            if (movimento.ValorTransacao <= 0)
+                return (false, "O valor da transação deve ser superior a zero.");
+
+            using var dbTransaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var conta = await _context.Contas.FindAsync(novaTransacao.IdConta);
-                if (conta == null) return false;
+                var conta = await _context.Conta.FindAsync(movimento.IdConta);
+                if (conta == null) return (false, "Conta não encontrada.");
 
-                // 1 = Receita (Soma), 2 = Despesa (Subtrai)
-                if (novaTransacao.IdTipo == 1)
-                    conta.Montante += novaTransacao.ValorTransacao;
-                else if (novaTransacao.IdTipo == 2)
-                    conta.Montante -= novaTransacao.ValorTransacao;
+                // 2. Lógica de Saldo
+                if (movimento.IdTipo == 1) // Receita
+                {
+                    conta.Montante += movimento.ValorTransacao;
+                }
+                else if (movimento.IdTipo == 2) // Despesa
+                {
+                    // Validação de Saldo Insuficiente
+                    if (conta.Montante < movimento.ValorTransacao)
+                        return (false, "Saldo insuficiente para realizar esta despesa.");
 
-                _context.Transacoes.Add(novaTransacao);
+                    conta.Montante -= movimento.ValorTransacao;
+                }
+                else
+                {
+                    return (false, "Tipo de transação inválido.");
+                }
+
+                // 3. Persistência
+                movimento.DataTransacao = DateTime.Now;
+                _context.Transacaos.Add(movimento);
+
                 await _context.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
 
-                await transaction.CommitAsync();
-                return true;
+                return (true, "Sucesso!");
             }
-            catch
+            catch (Exception ex)
             {
-                await transaction.RollbackAsync();
-                return false;
+                await dbTransaction.RollbackAsync();
+                // Isto é crucial para o teu "eu" do futuro não perder horas no debug:
+                Debug.WriteLine($"[ERRO FINANCE_SERVICE]: {ex.Message}");
+                Debug.WriteLine($"[STACK TRACE]: {ex.StackTrace}");
+
+                return (false, "Erro técnico ao processar a transação. Tente novamente.");
             }
+        }
+
+        // --- DASHBOARD ---
+
+        public async Task<decimal> GetSaldoTotalContratoAsync(int idContrato)
+        {
+            return await _context.Conta
+                .Where(c => c.IdContrato == idContrato)
+                .Select(c => (decimal?)c.Montante) // Cast para nullable para evitar erro se vazio
+                .SumAsync() ?? 0m;
+        }
+
+        public async Task<Dictionary<string, decimal>> GetGastosPorCategoriaAsync(int idContrato)
+        {
+            return await _context.Transacaos
+                .Include(t => t.IdCategoriaNavigation)
+                .Include(t => t.IdContaNavigation)
+                .Where(t => t.IdContaNavigation!.IdContrato == idContrato && t.IdTipo == 2)
+                .GroupBy(t => t.IdCategoriaNavigation!.Nome) // Substitui 'Designacao' pelo nome real que está no ficheiro Categorium.cs
+                .Select(g => new {
+                    // Se a categoria for nula, usamos "Outros"
+                    Categoria = g.Key ?? "Outros",
+                    Total = g.Sum(t => t.ValorTransacao)
+                })
+                .ToDictionaryAsync(x => x.Categoria, x => x.Total);
         }
     }
 }

@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Finance.Core.Models;
 
-namespace Finance.Core.Models
+public partial class EstadoContratoCliente
 {
-    public class EstadoContratoCliente
-    {
-        public int IdEstado { get; set; }
-        public string Designacao { get; set; } = string.Empty;
+    public int IdEstado { get; set; }
 
-        // Relacionamento: Este estado pode ser aplicado a várias ligações contrato-cliente
-        public virtual ICollection<ContratoCliente> ContratosClientes { get; set; } = new List<ContratoCliente>();
-    }
+    public string Designacao { get; set; } = null!;
+
+    public virtual ICollection<ContratoCliente> ContratoClientes { get; set; } = new List<ContratoCliente>();
 }

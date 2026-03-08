@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Text;
+﻿namespace Finance.Core.Models;
 
-namespace Finance.Core.Models
+public partial class ContratoCliente
 {
-    public class ContratoCliente
-    {
-        public int IdContrato { get; set; }
-        public virtual Contrato? Contrato { get; set; }
+    public int IdContrato { get; set; }
 
-        public int IdCliente { get; set; }
-        public virtual Cliente? Cliente { get; set; }
+    public int IdCliente { get; set; }
 
-        // Estado da ligação (Titular, Beneficiário, etc.)
-        public int IdEstadoContratoCliente { get; set; }
-        public virtual EstadoContratoCliente? Estado { get; set; }
-    }
+    public int? IdEstadoContratoCliente { get; set; }
+
+    public virtual Cliente IdClienteNavigation { get; set; } = null!;
+
+    public virtual Contrato IdContratoNavigation { get; set; } = null!;
+
+    public virtual EstadoContratoCliente? IdEstadoContratoClienteNavigation { get; set; }
 }

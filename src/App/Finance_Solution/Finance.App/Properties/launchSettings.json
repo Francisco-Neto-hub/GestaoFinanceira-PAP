@@ -4,7 +4,7 @@
       "commandName": "Project",
       "nativeDebugging": false,
       "ConnectionStrings": {
-        "DefaultConnection": "Server=192.168.1.199;Database=Finance_BD_v2;User Id=admin;Password=812876;TrustServerCertificate=True;MultipleActiveResultSets=true"
+        "DefaultConnection": "Server=DESKTOP-76S1NRV\\SQLEXPRESS;Database=Finance_BD_v2;TrustServerCertificate=True;MultipleActiveResultSets=true"
       }
     }
   }

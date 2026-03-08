@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Finance.Core.Models;
 
-namespace Finance.Core.Models
+public partial class Contrato
 {
-    public class Contrato
-    {
-        public int IdContrato { get; set; }
-        public DateTime DataInicio { get; set; }
-        public DateTime? DataFim { get; set; }
+    public int IdContrato { get; set; }
 
-        // Relacionamento com o Estado do Contrato
-        public int IdEstado_Contrato { get; set; }
-        public virtual EstadoContrato? Estado { get; set; }
+    public DateOnly DataInicio { get; set; }
 
-        // Relacionamentos: Um contrato pode ter vários clientes e várias contas
-        public virtual ICollection<ContratoCliente> Clientes { get; set; } = new List<ContratoCliente>();
-        public virtual ICollection<Conta> Contas { get; set; } = new List<Conta>();
-    }
+    public DateOnly? DataFim { get; set; }
+
+    public int? IdEstadoContrato { get; set; }
+
+    public virtual ICollection<Contum> Conta { get; set; } = new List<Contum>();
+
+    public virtual ICollection<ContratoCliente> ContratoClientes { get; set; } = new List<ContratoCliente>();
+
+    public virtual EstadoContrato? IdEstadoContratoNavigation { get; set; }
 }
